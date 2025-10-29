@@ -275,24 +275,9 @@ void moveTunnel()
             
             //score increases with every section passed
             score += 1;
-            if (gameMode == 0)
-            {
-                if(score > save.highScore_a)
-                    save.highScore_a = score; 
-            }
-            else
-            {
-                if(gameMode == 1)
-                {
-                    if(score > save.highScore_b)
-                        save.highScore_b = score; 
-                }
-                else
-                {
-                       if(score > save.highScore_c)
-                        save.highScore_c = score; 
-                }
-            }
+            if(score > save.highScores[gameMode])
+                save.highScores[gameMode] = score; 
+
             //make tunnel smaller
             if(gameMode == 0)
                 if(tunnelPlayableGap > TunnelMinimumPlayableGap)
@@ -367,6 +352,8 @@ void drawScreenBorder()
 
 void main()
 {  
+    int[250] Text;
+    int[100] Text2;
 	memset( &GameSignature, 0, sizeof(game_signature));
     strcpy( GameSignature, "WORM");
 	LoadSavedData();
@@ -399,15 +386,9 @@ void main()
                 startDelay--;
                 if(startDelay > 20)            
                 {
-                    if(gameMode == 0)   
-                        textfont_print_centered(&FontLetters, screen_width / 2, screen_height/3, "Playing GAME A\n\nREADY");
-                    else 
-                    {
-                        if(gameMode == 1)
-                            textfont_print_centered(&FontLetters, screen_width / 2, screen_height/3, "Playing GAME B\n\nREADY");
-                        else
-                            textfont_print_centered(&FontLetters, screen_width / 2, screen_height/3, "Playing GAME C\n\nREADY");
-                    }
+                    strcpy(Text2, "Playing GAME A\n\nREADY");
+                    Text2[13] = (int)'A' + gameMode;
+                    textfont_print_centered(&FontLetters, screen_width / 2, screen_height/3, Text2);
                 }
                 else
                 {
@@ -420,24 +401,25 @@ void main()
         else
         {
             set_multiply_color(color_white);
-            textfont_print_centered(&FontLetters, screen_width / 2, ScreenBorderWidth + 33, "WORM");
-            textfont_print_centered(&FontLetters, screen_width / 2, ScreenBorderWidth + 90, "Press A for GAME A\nPress B for GAME B\nPress Y for GAME C\nPressing A Repeadetly\nwill keep the worm alive");
+            strcpy(Text, "WORM\n\nPress A To Play GAME A");
+            Text[27] = (int)'A' + gameMode;
+            strcat(Text, "\nPress Direction To Change Mode\nPressing A Repeadetly\nwill keep the worm alive");
+            textfont_print_centered(&FontLetters, screen_width / 2, ScreenBorderWidth + 33, Text);
             if(gamepad_button_a() == 1)
-            {
-                gameMode = 0;
                 startGame(gameMode);
+
+            if(gamepad_left() == 1)
+            {
+                gameMode--;
+                if (gameMode < 0)
+                    gameMode = MaxGameModes -1;
             }
 
-            if(gamepad_button_b() == 1)
+            if(gamepad_right() == 1)
             {
-                gameMode = 1;
-                startGame(gameMode);
-            }
-
-            if(gamepad_button_y() == 1)
-            {
-                gameMode = 2;
-                startGame(gameMode);
+                gameMode++;
+                if (gameMode > MaxGameModes -1)
+                    gameMode = 0;
             }
         }
         int[100] Text;
@@ -446,16 +428,7 @@ void main()
         itoa(score, nr, 10);
         strcat(Text, nr);
         strcat(Text, " Hi:");
-        if(gameMode == 0)
-            itoa(save.highScore_a, nr, 10);
-        else
-        {
-            if(gameMode == 1)
-                itoa(save.highScore_b, nr, 10);
-            else
-                itoa(save.highScore_c, nr, 10);
-        }
-
+        itoa(save.highScores[gameMode], nr, 10);
         strcat(Text, nr);
         set_multiply_color(color_white);
         textfont_print_from_right(&FontLetters,screen_width -2 -ScreenBorderWidth, screen_height -2 - ScreenBorderWidth, Text);

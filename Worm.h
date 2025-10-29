@@ -22,6 +22,8 @@
 
 #define player_x 250
 
+#define MaxGameModes 3
+
 // names for textures
 #define TextureFullFont 0
 

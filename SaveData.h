@@ -5,9 +5,7 @@
 #include "memcard.h"
 
 struct SaveData {
-	int highScore_a;
-	int highScore_b;
-	int highScore_c;
+	int[MaxGameModes] highScores;
 };
 
 game_signature GameSignature;
@@ -16,9 +14,8 @@ SaveData save;
 
 void LoadSavedData()
 {
-	save.highScore_a = 0;
-	save.highScore_b = 0;
-	save.highScore_c = 0;
+	for (int i = 0; i < MaxGameModes; i++)
+		save.highScores[i] = 0;
 	if(card_is_connected())
 		if(card_signature_matches( &GameSignature ))
 		{
