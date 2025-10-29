@@ -62,7 +62,7 @@ void drawObstacles()
     for(int i = 0; i < obstacleCount; i++)
         //don't draw not used obstacles
         if((obstacles[i].x > 0) && (obstacles[i].y > 0))
-            draw_filled_rectangle(obstacles[i].x, obstacles[i].y, obstacles[i].x + obstacles[i].w+1, obstacles[i].y + obstacles[i].h);
+            draw_filled_rectangle(obstacles[i].x, obstacles[i].y, obstacles[i].x + obstacles[i].w, obstacles[i].y + obstacles[i].h);
 }
 
 void moveObstacles()
@@ -108,6 +108,36 @@ void moveObstacles()
         obstacleCount++;
     }
 }
+
+void drawCollectibles()
+{
+    set_multiply_color(color_yellow);
+    for(int i = 0; i < collectibleCount; i++)
+        //don't draw not used collectible
+        if((collectibles[i].x > 0) && (collectibles[i].y > 0))
+            draw_filled_rectangle(collectibles[i].x, collectibles[i].y, collectibles[i].x + collectibles[i].w, collectibles[i].y + collectibles[i].h);
+  
+}
+
+void moveCollectibles()
+{
+    //for each collectible
+    for (int i = 0; i < collectibleCount; i++)
+        //move it at tunnelSpeed
+        collectibles[i].x -= tunnelSpeed;
+
+    //when we have no collectible or the last added collectible is smaller than the spacing between collectible from right side of screen
+    if ((collectibleCount == 0) || ((collectibleCount < MaxCollectibles) && (collectibles[collectibleCount-1].x < ScreenWidth - ((ScreenWidth - player_x) / MaxCollectibles))))
+    {
+        //add a new collectible (then 10 and 20 is to always add a spacing between tunnel wall the collectible)
+        collectibles[collectibleCount].x =  ScreenWidth;
+        collectibles[collectibleCount].y =  tunnelParts[(screen_width / tunnelSectionWidth)*2].h + 20 + randint(0, tunnelPlayableGap - CollectibleHeight - 40);
+        collectibles[collectibleCount].w = CollectibleWidth;
+        collectibles[collectibleCount].h = CollectibleHeight;
+        collectibleCount++;
+    }
+}
+
 
 void drawPlayer()
 {
@@ -159,6 +189,32 @@ void movePlayer()
     {
         if ((player_x -2 >= obstacles[i].x) && (player_x +2 <= obstacles[i].x + obstacles[i].w) &&
             (player_y -2 >= obstacles[i].y) && (player_y +2 <= obstacles[i].y + obstacles[i].h))
+            playing = false;
+    }
+
+    
+    for (int i = 0; i < MaxCollectibles; i++)
+    {
+        //player is inside collectible (added )
+        if ((player_x >= collectibles[i].x) && (player_x <= collectibles[i].x + collectibles[i].w) &&
+            (player_y >= collectibles[i].y) && (player_y <= collectibles[i].y + collectibles[i].h))
+        {
+            //erase it from the array by moving all other obstalces one position down
+            for (int j = 0; j < collectibleCount; j++)
+            {
+                collectibles[j].x = collectibles[j+1].x;
+                collectibles[j].y = collectibles[j+1].y;
+            }
+
+            //and create a new obstacle at the right side of the screen
+            collectibles[collectibleCount-1].x =  ScreenWidth;
+            collectibles[collectibleCount-1].y =  tunnelParts[(screen_width / tunnelSectionWidth)*2].h + 10 + randint(0, tunnelPlayableGap - CollectibleHeight - 20);
+            collectibles[collectibleCount-1].w = CollectibleWidth;
+            collectibles[collectibleCount-1].h = CollectibleHeight;
+        }
+
+        //collectible is futher away than playerx (player missed to pick it up)
+        if (player_x - 10 > collectibles[i].x + collectibles[i].w)
             playing = false;
     }
 
@@ -279,13 +335,13 @@ void moveTunnel()
                 save.highScores[gameMode] = score; 
 
             //make tunnel smaller
-            if(gameMode == 0)
+            if((gameMode == 0) || (gameMode == 3))
                 if(tunnelPlayableGap > TunnelMinimumPlayableGap)
                     if(score % 4 == 0)
                         tunnelPlayableGap -= 1;
             
             //need to increase speed ?
-            if((gameMode == 1) || (gameMode == 2))
+            if((gameMode == 1) || (gameMode == 2) || (gameMode == 3))
                 //if(tunnelSpeed < MaxTunnelSpeed)
                     if(score % (speedTarget) == 0)
                         increaseTunnelSpeed = true;
@@ -304,6 +360,7 @@ void startGame(int mode)
     tunnelPlayableGap = StartTunnelPlayableGap;
     score = 0;
     obstacleCount = 0;
+    collectibleCount = 0;
     playing = true;
     tunnelSpeed = StartTunnelSpeed;
     speedTarget = StartSpeedTarget;
@@ -313,6 +370,8 @@ void startGame(int mode)
         MaxObstacles = 4;
     if (gameMode == 2)
         MaxObstacles = 2;
+    if (gameMode == 4)
+        MaxCollectibles = 3;
     //set some defaults in the arrays
     for(int i = 0; i < ScreenWidth; i++)
     {
@@ -333,6 +392,14 @@ void startGame(int mode)
         obstacles[i].y = 0;
         obstacles[i].w = 0;
         obstacles[i].h = 0;
+    }
+
+    for(int i = 0 ; i < MaxCollectibles; i++)
+    {
+        collectibles[i].x = ScreenWidth;
+        collectibles[i].y = 0;
+        collectibles[i].w = 0;
+        collectibles[i].h = 0;
     }
     createTunnel();
 }
@@ -367,6 +434,8 @@ void main()
         drawTunnel();
         if((gameMode == 0) || (gameMode == 2))
             drawObstacles();
+        if((gameMode == 4))
+            drawCollectibles();
         drawPlayer();
         drawScreenBorder();
         if(playing)
@@ -376,7 +445,9 @@ void main()
                 moveTunnel();
                 if((gameMode == 0) || (gameMode == 2))
                     moveObstacles();
-                movePlayer();            
+                if((gameMode == 4))
+                    moveCollectibles();
+                movePlayer();
                 if (!playing)
                     SaveSavedData();
             }
@@ -384,7 +455,7 @@ void main()
             {
                 set_multiply_color(color_white);
                 startDelay--;
-                if(startDelay > 20)            
+                if(startDelay > 20)
                 {
                     strcpy(Text2, "Playing GAME A\n\nREADY");
                     Text2[13] = (int)'A' + gameMode;
