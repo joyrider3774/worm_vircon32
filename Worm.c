@@ -356,6 +356,10 @@ void moveTunnel()
 
 void startGame(int mode)
 {
+    if (seed == 0)
+        srand(get_time());
+    else
+        srand(seed);
     playerSpeed = 0;
     tunnelPlayableGap = StartTunnelPlayableGap;
     score = 0;
@@ -492,17 +496,55 @@ void main()
                 if (gameMode > MaxGameModes -1)
                     gameMode = 0;
             }
+
+            if(gamepad_button_l() == 1)
+            {
+                seed -= 1;
+                if(seed < 0)
+                    seed = 0;
+            }
+
+            if (gamepad_button_r() == 1)
+            {
+                seed += 1;
+                if(seed > 9999)
+                    seed = 9999;
+            }
+
+            if(gamepad_button_l() > 30)
+            {
+                seed -= 15;
+                if(seed < 0)
+                    seed = 0;
+            }
+
+            if (gamepad_button_r() > 30)
+            {
+                seed += 15;
+                if(seed > 9999)
+                    seed = 9999;
+            }
+
+            if (gamepad_button_start() > 30)
+                for (int i = 0; i < MaxGameModes; i++)
+                    save.highScores[i] = 0;
+                
         }
         int[100] Text;
-        strcpy(Text, "Score:");
+        strcpy(Text, "Seed:");
         int[100] nr;
+        itoa(seed, nr, 10);
+        strcat(Text, nr);
+        set_multiply_color(color_white);
+        textfont_print_from_left(&FontLetters, ScreenBorderWidth + 1, screen_height -2 - ScreenBorderWidth, Text);
+        strcpy(Text, "S:");
         itoa(score, nr, 10);
         strcat(Text, nr);
-        strcat(Text, " Hi:");
+        strcat(Text, " H:");
         itoa(save.highScores[gameMode], nr, 10);
         strcat(Text, nr);
         set_multiply_color(color_white);
-        textfont_print_from_right(&FontLetters,screen_width -2 -ScreenBorderWidth, screen_height -2 - ScreenBorderWidth, Text);
+        textfont_print_from_right(&FontLetters,screen_width -2 -ScreenBorderWidth,screen_height -2 - ScreenBorderWidth , Text);
         end_frame();
     }
 }

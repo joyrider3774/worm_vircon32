@@ -46,7 +46,7 @@ struct Point {
 };
 
 textfont FontLetters;
-int score = 0, tunnelPlayableGap = StartTunnelPlayableGap, obstacleCount = 0, collectibleCount = 0, tunnelSpeed = StartTunnelSpeed;
+int score = 0, seed = 0, tunnelPlayableGap = StartTunnelPlayableGap, obstacleCount = 0, collectibleCount = 0, tunnelSpeed = StartTunnelSpeed;
 int tunnelSectionWidth = 8, tunnelSpacer = 16, gameMode = 0, speedTarget = StartSpeedTarget, startDelay=0, MaxObstacles = 4, MaxCollectibles = 3;
 float player_y = 0, playerSpeed = 0;
 Rect[ScreenWidth*2] tunnelParts; // in case spacing is 1
