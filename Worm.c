@@ -4,6 +4,7 @@
 #include "misc.h"
 #include "input.h"
 #include "memcard.h"
+#include "math.h"
 #include "libs/DrawPrimitives/draw_primitives.h"
 #include "libs/TextFonts/textfont.h"
 #include "Worm.h"
@@ -56,6 +57,18 @@ int randint(int min, int max)
     return (rand() % (max - min)) + min;
 }
 
+//intersection check instead of fully inside
+int checkCollision(Rect* r1, Rect* r2) 
+{
+    int x_left = max(r1->x, r2->x);
+    int x_right = min(r1->x + r1->w, r2->x + r2->w);
+    
+    int y_top = max(r1->y, r2->y);
+    int y_bottom = min(r1->y + r1->h, r2->y + r2->h);
+
+    return ((x_right >= x_left) && (y_bottom >= y_top)); 
+}
+
 void drawObstacles()
 {
     set_multiply_color(color_cyan);
@@ -90,7 +103,7 @@ void moveObstacles()
 
                 //and create a new obstacle at the right side of the screen
                 obstacles[obstacleCount-1].x =  ScreenWidth;
-                obstacles[obstacleCount-1].y =  tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth))*2].h + randint(obstacleSpaceFromTunnel, tunnelPlayableGap - ObstacleHeight - 2*obstacleSpaceFromTunnel);
+                obstacles[obstacleCount-1].y =  tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth))*2].h + randint(ObstacleSpaceFromTunnel, tunnelPlayableGap - ObstacleHeight - 2*ObstacleSpaceFromTunnel);
                 obstacles[obstacleCount-1].w = ObstacleWidth;
                 obstacles[obstacleCount-1].h = ObstacleHeight;
             }
@@ -102,7 +115,7 @@ void moveObstacles()
     {
         //add a new obstacles
         obstacles[obstacleCount].x =  ScreenWidth;
-        obstacles[obstacleCount].y =  tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth))*2].h + randint(obstacleSpaceFromTunnel, tunnelPlayableGap - ObstacleHeight - 2* obstacleSpaceFromTunnel);
+        obstacles[obstacleCount].y =  tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth))*2].h + randint(ObstacleSpaceFromTunnel, tunnelPlayableGap - ObstacleHeight - 2* ObstacleSpaceFromTunnel);
         obstacles[obstacleCount].w = ObstacleWidth;
         obstacles[obstacleCount].h = ObstacleHeight;
         obstacleCount++;
@@ -131,7 +144,7 @@ void moveCollectibles()
     {
         //add a new collectible (then 10 and 20 is to always add a spacing between tunnel wall the collectible)
         collectibles[collectibleCount].x =  ScreenWidth;
-        collectibles[collectibleCount].y =  tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth))*2].h + randint(collectibleSpaceFromTunnel, tunnelPlayableGap - CollectibleHeight - 2 * collectibleSpaceFromTunnel);
+        collectibles[collectibleCount].y =  tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth))*2].h + randint(CollectibleSpaceFromTunnel, tunnelPlayableGap - CollectibleHeight - 2 * CollectibleSpaceFromTunnel);
         collectibles[collectibleCount].w = CollectibleWidth;
         collectibles[collectibleCount].h = CollectibleHeight;
         collectibleCount++;
@@ -151,7 +164,7 @@ void drawPlayer()
             draw_filled_rectangle((int)playerTrail[x].x-2, (int)playerTrail[x].y-2, (int)playerTrail[x].x+2, (int)playerTrail[x].y+2);
             if (x > 0)
                 if ((playerTrail[x-1].y > 0) && (playerTrail[x-1].x > 0))
-                    for (int y = 0; y < 6; y++)
+                    for (int y = 0; y < PlayerWidthHeight+1; y++)
                         draw_line((int)playerTrail[x].x, (int)playerTrail[x].y-2+y, (int)playerTrail[x-1].x, (int)playerTrail[x-1].y-2+y);
         }
     }
@@ -176,19 +189,23 @@ void movePlayer()
     playerTrail[player_x].x = player_x;
     playerTrail[player_x].y = player_y;
 
+    Rect playerRect;
+    playerRect.x = player_x -2;
+    playerRect.y = player_y -2;
+    playerRect.w = PlayerWidthHeight;
+    playerRect.h = PlayerWidthHeight;
+    
     //player is inside tunnel section
-    for (int i = 0; i < (int)(ceil(ScreenWidth / tunnelSectionWidth) + offScreenTunnelSections) * 2; i++)
+    for (int i = 0; i < (int)(ceil(ScreenWidth / tunnelSectionWidth) + OffScreenTunnelSections) * 2; i++)
     {
-        if ((player_x -2 >= tunnelParts[i].x) && (player_x + 2 <= tunnelParts[i].x + tunnelParts[i].w) &&
-            (player_y -2 >= tunnelParts[i].y) && (player_y +2 <= tunnelParts[i].y + tunnelParts[i].h))
+        if (checkCollision(&playerRect, &tunnelParts[i]))
             playing = false;
     }
 
     //player is inside obstacle
     for (int i = 0; i < MaxObstacles; i++)
     {
-        if ((player_x -2 >= obstacles[i].x) && (player_x +2 <= obstacles[i].x + obstacles[i].w) &&
-            (player_y -2 >= obstacles[i].y) && (player_y +2 <= obstacles[i].y + obstacles[i].h))
+        if (checkCollision(&playerRect, &obstacles[i]))
             playing = false;
     }
 
@@ -196,8 +213,7 @@ void movePlayer()
     for (int i = 0; i < MaxCollectibles; i++)
     {
         //player is inside collectible (added )
-        if ((player_x >= collectibles[i].x) && (player_x <= collectibles[i].x + collectibles[i].w) &&
-            (player_y >= collectibles[i].y) && (player_y <= collectibles[i].y + collectibles[i].h))
+        if (checkCollision(&playerRect, &collectibles[i]))
         //debug
         //if (player_x > collectibles[i].x + collectibles[i].w)
         {
@@ -212,7 +228,7 @@ void movePlayer()
             if (collectibleCount > 0)
             {
                 collectibles[collectibleCount - 1].x = ScreenWidth;
-                collectibles[collectibleCount - 1].y = tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth)+ offScreenTunnelSections) * 2].h + randint(collectibleSpaceFromTunnel, tunnelPlayableGap - CollectibleHeight - 2 * collectibleSpaceFromTunnel);
+                collectibles[collectibleCount - 1].y = tunnelParts[(int)(ceil(ScreenWidth / tunnelSectionWidth)+ OffScreenTunnelSections) * 2].h + randint(CollectibleSpaceFromTunnel, tunnelPlayableGap - CollectibleHeight - 2 * CollectibleSpaceFromTunnel);
                 collectibles[collectibleCount - 1].w = CollectibleWidth;
                 collectibles[collectibleCount - 1].h = CollectibleHeight;
             }
@@ -236,7 +252,7 @@ void createTunnel()
     //grab a height
     int top_height =  randint(0, tunnelPlayableGap);
     
-    for(int i = 0; i <= ceil(ScreenWidth / tunnelSectionWidth)+ offScreenTunnelSections; i++)
+    for(int i = 0; i <= ceil(ScreenWidth / tunnelSectionWidth)+ OffScreenTunnelSections; i++)
     {
         //grab a height based on previous height with tunnelSpacer deviation of height
         top_height = randint(top_height - tunnelSpacer, top_height + tunnelSpacer);        
@@ -271,7 +287,7 @@ void createTunnel()
 void drawTunnel()
 {
     set_multiply_color(color_green);
-    for(int i = 0; i <= ceil((ScreenWidth / tunnelSectionWidth)+ offScreenTunnelSections) * 2; i += 2)
+    for(int i = 0; i <= ceil((ScreenWidth / tunnelSectionWidth)+ OffScreenTunnelSections) * 2; i += 2)
     {
         draw_filled_rectangle(tunnelParts[i].x, tunnelParts[i].y, tunnelParts[i].x + tunnelParts[i].w+1, tunnelParts[i].y + tunnelParts[i].h);
         draw_filled_rectangle(tunnelParts[i+1].x, tunnelParts[i+1].y, tunnelParts[i+1].x + tunnelParts[i+1].w, tunnelParts[i+1].y + tunnelParts[i+1].h);
@@ -281,7 +297,7 @@ void drawTunnel()
 void moveTunnel()
 {
     //for every tunnel section
-    for(int j = 0; j <= ceil(ScreenWidth / tunnelSectionWidth)+ offScreenTunnelSections; j++)
+    for(int j = 0; j <= ceil(ScreenWidth / tunnelSectionWidth)+ OffScreenTunnelSections; j++)
     {
         //move top & bottom tunnel part
         tunnelParts[j*2].x = tunnelParts[j*2].x - tunnelSpeed;
@@ -291,13 +307,13 @@ void moveTunnel()
     bool increaseTunnelSpeed = false;
 
     //for every tunnel section
-    for(int j = 0; j <= ceil(ScreenWidth / tunnelSectionWidth)+ offScreenTunnelSections; j++)
+    for(int j = 0; j <= ceil(ScreenWidth / tunnelSectionWidth)+ OffScreenTunnelSections; j++)
     {
         //if tunnel section is offscreen on the left
         if (tunnelParts[j*2].x + tunnelSectionWidth <= 0)
         {
             //erase that section from the arrray by moving all other section down in the array
-            for (int i = 0; i <= ceil(ScreenWidth / tunnelSectionWidth)+ offScreenTunnelSections;i++)
+            for (int i = 0; i <= ceil(ScreenWidth / tunnelSectionWidth)+ OffScreenTunnelSections;i++)
             {
                 tunnelParts[i*2].x = tunnelParts[i*2+2].x;
                 tunnelParts[i*2].y = tunnelParts[i*2+2].y;
@@ -310,7 +326,7 @@ void moveTunnel()
             }
 
             // create new piece at the end of the array
-            int lastElement = (int)(ceil((float)ScreenWidth / tunnelSectionWidth) + offScreenTunnelSections) * 2;
+            int lastElement = (int)(ceil((float)ScreenWidth / tunnelSectionWidth) + OffScreenTunnelSections) * 2;
             
 			// place the new section exactly after the current rightmost
             int newX = tunnelParts[lastElement - 2].x + tunnelSectionWidth;
@@ -414,7 +430,7 @@ void startGame(int mode)
     if (gameMode == 4)
         MaxCollectibles = 3;
     //set some defaults in the arrays
-    for(int i = 0; i < ScreenWidth + offScreenTunnelSections; i++)
+    for(int i = 0; i < ScreenWidth + OffScreenTunnelSections; i++)
     {
         playerTrail[i].x = 0;
         playerTrail[i].y = 0;

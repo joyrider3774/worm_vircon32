@@ -8,17 +8,19 @@
 
 #define ObstacleWidth 10
 #define ObstacleHeight 35
-#define obstacleSpaceFromTunnel 10
+#define ObstacleSpaceFromTunnel 10
+
+#define PlayerWidthHeight 5
 
 #define CollectibleWidth 20
 #define CollectibleHeight 20
-#define collectibleSpaceFromTunnel 30
+#define CollectibleSpaceFromTunnel 30
 
 #define StartTunnelSpeed 2
 #define StartTunnelPlayableGap 180
 #define TunnelMinimumPlayableGap 120
 #define MaxTunnelSpeed 7
-#define offScreenTunnelSections 3
+#define OffScreenTunnelSections 3
 
 #define tunnelSectionWidth 8
 #define tunnelSpacer 16
