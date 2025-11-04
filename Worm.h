@@ -6,7 +6,7 @@
 #define ScreenWidth 640
 #define ScreenHeight 360
 
-#define ObstacleWidth 10
+#define ObstacleWidth 12
 #define ObstacleHeight 35
 #define ObstacleSpaceFromTunnel 10
 
