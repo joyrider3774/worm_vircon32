@@ -225,8 +225,10 @@ void movePlayer()
     playerRect.w = PlayerWidthHeight;
     playerRect.h = PlayerWidthHeight;
     
+
+    int playerTunnelSection = player_x / tunnelSectionWidth*2;
     //player is inside tunnel section
-    for (int i = 0; i < numTunnelSections * 2; i++)
+    for (int i = playerTunnelSection -2; i <= playerTunnelSection + 2; i++)
     {
         if (checkCollision(&playerRect, &tunnelParts[i]))
             playing = false;
@@ -336,76 +338,83 @@ void moveTunnel()
     
     bool increaseTunnelSpeed = false;
 
-    //if left most tunnel section is offscreen on the left
-    if (tunnelParts[0].x + tunnelSectionWidth <= 0)
+    for (int i = 0; i < numTunnelSections * 2; i++)
     {
-        //erase that section from the arrray by moving all other section down in the array
-        for (int i = 0; i <= numTunnelSections;i++)
-        {
-            tunnelParts[i*2].x = tunnelParts[i*2+2].x;
-            tunnelParts[i*2].y = tunnelParts[i*2+2].y;
-            tunnelParts[i*2].w = tunnelParts[i*2+2].w;
-            tunnelParts[i*2].h = tunnelParts[i*2+2].h;
-            tunnelParts[i*2+1].x = tunnelParts[i*2+3].x;
-            tunnelParts[i*2+1].y = tunnelParts[i*2+3].y;
-            tunnelParts[i*2+1].w = tunnelParts[i*2+3].w;
-            tunnelParts[i*2+1].h = tunnelParts[i*2+3].h;
-        }
-
-        // create new piece at the end of the array
-        int lastElement = numTunnelSections * 2;
         
-        // place the new section exactly after the current rightmost
-        int newX = tunnelParts[lastElement - 2].x + tunnelSectionWidth;
-
-        // --- randomize top height (clamped as before) ---
-        int top_height = randint(
-            tunnelParts[lastElement - 2].h - tunnelSpacer,
-            tunnelParts[lastElement - 2].h + tunnelSpacer
-        );
-
-        if (top_height < 0)
-            top_height = 0;
+        //if tunnel section are back on screen, break out of loop
+        if (tunnelParts[i].x + tunnelSectionWidth >= 0)
+            break;
         else
+        //if left most tunnel sections is offscreen on the left
         {
-            if (top_height > tunnelPlayableGap)
-                top_height = tunnelPlayableGap;
+            //erase that section from the arrray by moving all other section down in the array
+            for (int i = 0; i <= numTunnelSections;i++)
+            {
+                tunnelParts[i*2].x = tunnelParts[i*2+2].x;
+                tunnelParts[i*2].y = tunnelParts[i*2+2].y;
+                tunnelParts[i*2].w = tunnelParts[i*2+2].w;
+                tunnelParts[i*2].h = tunnelParts[i*2+2].h;
+                tunnelParts[i*2+1].x = tunnelParts[i*2+3].x;
+                tunnelParts[i*2+1].y = tunnelParts[i*2+3].y;
+                tunnelParts[i*2+1].w = tunnelParts[i*2+3].w;
+                tunnelParts[i*2+1].h = tunnelParts[i*2+3].h;
+            }
+
+            // create new piece at the end of the array
+            int lastElement = numTunnelSections * 2;
+            
+            // place the new section exactly after the current rightmost
+            int newX = tunnelParts[lastElement - 2].x + tunnelSectionWidth;
+
+            // --- randomize top height (clamped as before) ---
+            int top_height = randint(
+                tunnelParts[lastElement - 2].h - tunnelSpacer,
+                tunnelParts[lastElement - 2].h + tunnelSpacer
+            );
+
+            if (top_height < 0)
+                top_height = 0;
+            else
+            {
+                if (top_height > tunnelPlayableGap)
+                    top_height = tunnelPlayableGap;
+            }
+
+            // --- assign new top & bottom tunnel parts ---
+            tunnelParts[lastElement].x = newX;
+            tunnelParts[lastElement].y = 0;
+            tunnelParts[lastElement].w = tunnelSectionWidth;
+            tunnelParts[lastElement].h = top_height;
+
+            //bottom of tunnel
+            tunnelParts[lastElement + 1].x = newX;
+            tunnelParts[lastElement + 1].y = top_height + tunnelPlayableGap;
+            tunnelParts[lastElement + 1].w = tunnelSectionWidth;
+            tunnelParts[lastElement + 1].h = ScreenHeight - top_height - tunnelPlayableGap;
+
+            //score increases with every section passed
+            score += 1;
+            if (seed < maxSeed)
+            {
+                if (score > save.highScores[gameMode * maxSeed + seed])
+                    save.highScores[gameMode * maxSeed + seed] = score;
+            }
+            else if (score > save.highScores[gameMode * maxSeed])
+                save.highScores[gameMode * maxSeed] = score;
+
+            //make tunnel smaller
+            if((gameMode == 0) || (gameMode == 3))
+                if(tunnelPlayableGap > TunnelMinimumPlayableGap)
+                    if(score % 4 == 0)
+                        tunnelPlayableGap -= 1;
+            
+            //need to increase speed ?
+            if((gameMode == 1) || (gameMode == 2) || (gameMode == 3))
+                //if(tunnelSpeed < MaxTunnelSpeed)
+                    if(score % (speedTarget) == 0)
+                        increaseTunnelSpeed = true;
         }
-
-        // --- assign new top & bottom tunnel parts ---
-        tunnelParts[lastElement].x = newX;
-        tunnelParts[lastElement].y = 0;
-        tunnelParts[lastElement].w = tunnelSectionWidth;
-        tunnelParts[lastElement].h = top_height;
-
-        //bottom of tunnel
-        tunnelParts[lastElement + 1].x = newX;
-        tunnelParts[lastElement + 1].y = top_height + tunnelPlayableGap;
-        tunnelParts[lastElement + 1].w = tunnelSectionWidth;
-        tunnelParts[lastElement + 1].h = ScreenHeight - top_height - tunnelPlayableGap;
-
-        //score increases with every section passed
-        score += 1;
-        if (seed < maxSeed)
-        {
-            if (score > save.highScores[gameMode * maxSeed + seed])
-                save.highScores[gameMode * maxSeed + seed] = score;
-        }
-        else if (score > save.highScores[gameMode * maxSeed])
-            save.highScores[gameMode * maxSeed] = score;
-
-        //make tunnel smaller
-        if((gameMode == 0) || (gameMode == 3))
-            if(tunnelPlayableGap > TunnelMinimumPlayableGap)
-                if(score % 4 == 0)
-                    tunnelPlayableGap -= 1;
-        
-        //need to increase speed ?
-        if((gameMode == 1) || (gameMode == 2) || (gameMode == 3))
-            //if(tunnelSpeed < MaxTunnelSpeed)
-                if(score % (speedTarget) == 0)
-                    increaseTunnelSpeed = true;
-    }        
+    }
 
     if(increaseTunnelSpeed)
     {                        
