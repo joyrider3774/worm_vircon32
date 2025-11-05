@@ -228,7 +228,7 @@ void movePlayer()
 
     int playerTunnelSection = player_x / tunnelSectionWidth*2;
     //player is inside tunnel section
-    for (int i = playerTunnelSection -2; i <= playerTunnelSection + 2; i++)
+    for (int i = playerTunnelSection -4; i <= playerTunnelSection + 4; i++)
     {
         if (checkCollision(&playerRect, &tunnelParts[i]))
             playing = false;
