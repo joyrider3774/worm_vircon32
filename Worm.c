@@ -342,6 +342,7 @@ void moveTunnel()
     {
         
         //if tunnel section are back on screen, break out of loop
+        //tunnel sections are kept from left to right (lowest x)
         if (tunnelParts[i].x + tunnelSectionWidth >= 0)
             break;
         else
