@@ -59,6 +59,10 @@ There are 5 Game modes to play on, each with their own specifics
 
 ## History
 
+### V1.2
+- Fixed writing out of tunnel array bounds during initialisation
+- Fixed writing out of playertrail array bounds during initialisation
+
 ### V1.1
 - Fixed 99 levels so people can play same levels
 - RND1 (random level between level 1 & 99)
