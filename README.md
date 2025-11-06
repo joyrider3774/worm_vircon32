@@ -57,6 +57,22 @@ There are 5 Game modes to play on, each with their own specifics
 - No obstacles
 - Constant slower speed
 
+## History
+
+### V1.1
+- Fixed 99 levels so people can play same levels
+- RND1 (random level between level 1 & 99)
+- RND2 (random level but higher than 99 also this is how version 1.0 worked)
+- Highscores for first 99 levels per game mode
+- global, shared highscore for levels > 99, this is how version 1.0 worked
+- Fixed tunnel gaps appearing, removed addition of tunnelspeed when creating new tunnelsections, all tunnel sections adhere to tunnelsectionwidth
+- UP/DOWN increases / Decreases level by 1
+- L/R increases / decreases level 10
+- Better collision checking, it now checks also on intersections instead of player being fully inside somewhere (like a wall, obstacle, or collectable)
+- Obstaclewidth increased from 8 to 10 to make sure we can't fly through it
+- Speed optimazations (not that they were required but it can help on lower specced devices not being able to run the vircon32 core full speed)
+- Renamed "Seed" to "Lvl" to make it more clear
+
 ## Credits
 The game was made possible after watching this youtube movie: [https://www.youtube.com/watch?v=W-3okcjOFnY](https://www.youtube.com/watch?v=W-3okcjOFnY)
 
