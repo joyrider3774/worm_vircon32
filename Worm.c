@@ -606,14 +606,14 @@ void main()
 
             if(gamepad_button_l() == 1)
             {
-                selSeed -= 15;
+                selSeed -= 10;
                 if(selSeed < 0)
                     selSeed =  maxSeed-1;
             }
 
             if (gamepad_button_r() == 1)
             {
-                selSeed += 15;
+                selSeed += 10;
                 if(selSeed > maxSeed-1)
                     selSeed = 0; 
             }
