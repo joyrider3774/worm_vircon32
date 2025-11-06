@@ -619,7 +619,7 @@ void main()
             }
 
             if (gamepad_button_start() > 30)
-                for (int i = 0; i < MaxGameModes; i++)
+                for (int i = 0; i < MaxGameModes*maxSeed; i++)
                     save.highScores[i] = 0;
                 
         }
